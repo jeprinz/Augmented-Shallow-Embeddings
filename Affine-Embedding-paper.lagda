@@ -3,7 +3,6 @@
 {-# OPTIONS --cumulativity #-}
 
 open import Data.Product
-open import Relation.Binary.PropositionalEquality
 open import Data.Sum
 open import Relation.Nullary
 -- for universe levels
@@ -11,8 +10,9 @@ open import Agda.Primitive
 open import Data.Empty
 open import Data.Unit
 open import Data.Nat
-open import Data.Bool
+open import Data.Bool hiding (T)
 open import Data.Maybe
+open import variables
 
 open import Augmented-Shallow-Embedding
 import Dep-Thy-shallow as S
@@ -21,25 +21,33 @@ import Dep-Thy-shallow as S
 --------------------------------------------------------------------------------
 Initial definitions
 
+POINTER: vardata and check
+
 \begin{code}
-data VarData : ∀{sΓ} → Context sΓ → Set where
+data VarData : Context sΓ → Set where
   ∅ : VarData ∅
-  _,_ : ∀{sΓ} → {Γ : Context sΓ} → {T : S.Type sΓ}
-    → VarData Γ → Bool → VarData (Γ , T)
+  _,_ : VarData Γ → Bool → VarData (Γ , T)
 
-data Check : ∀{sΓ} → {Γ : Context sΓ}
-  → VarData Γ → VarData Γ → VarData Γ → Set j where
+data Check : VarData Γ → VarData Γ → VarData Γ
+  → Set j where
   ∅ : Check ∅ ∅ ∅
-  consLeft : ∀{sΓ} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ} → (T : S.Type sΓ)
-    → Check Γ₁ Γ₂ Γ₃ → Check {_} {Γ , T} (Γ₁ , true) (Γ₂ , false) (Γ₃ , true)
-  consRight : ∀{sΓ} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ} → (T : S.Type sΓ)
-    → Check Γ₁ Γ₂ Γ₃ → Check {_} {Γ , T} (Γ₁ , false) (Γ₂ , true) (Γ₃ , true)
-  consNeither : ∀{sΓ} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ} → (T : S.Type sΓ)
-    → Check Γ₁ Γ₂ Γ₃ → Check {_} {Γ , T} (Γ₁ , false) (Γ₂ , false) (Γ₃ , false)
+  consLeft : (T : S.Type sΓ) → Check Γ₁ Γ₂ Γ₃
+    → Check {_} {Γ , T} (Γ₁ , true) (Γ₂ , false) (Γ₃ , true)
+  consRight : (T : S.Type sΓ) → Check Γ₁ Γ₂ Γ₃
+    → Check {_} {Γ , T} (Γ₁ , false) (Γ₂ , true) (Γ₃ , true)
+  consNeither : (T : S.Type sΓ) → Check Γ₁ Γ₂ Γ₃
+    → Check {_} {Γ , T} (Γ₁ , false) (Γ₂ , false) (Γ₃ , false)
 
-noneVars : ∀{sΓ} → {Γ : Context sΓ} → VarData Γ
-oneVars : ∀{aΓ T t} → (Γ : Context aΓ) → Var Γ T t → VarData Γ
-check : ∀{aΓ} → {Γ : Context aΓ} → (vd₁ vd₂ : VarData Γ)
+\end{code}
+
+
+POINTER
+
+\begin{code}
+
+noneVars : ∀{Γ} → VarData Γ
+oneVars : (Γ : Context aΓ) → Var Γ T t → VarData Γ
+check : (vd₁ vd₂ : VarData Γ)
   → Maybe (Σ {j} {j} (VarData Γ) (λ vd₃ → Check vd₁ vd₂ vd₃))
 \end{code}
 
@@ -64,44 +72,36 @@ oneVars .(_ , _) (next x) = oneVars _ x , false
 \end{code}
 
 --------------------------------------------------------------------------------
-Main definition
+POINTER - Main definition
 
 \begin{code}
 
-data AffineExp : {sΓ : S.Ctx} → (Γ : Context sΓ) → VarData Γ
+data AffineExp : (Γ : Context sΓ) → VarData Γ
   → (T : S.Type sΓ) → S.Exp sΓ T → Set j where
-  lambda : {b : Bool} → {sΓ : S.Ctx} → {Γ : Context sΓ} → {vd : VarData Γ}
-    → {A : S.Type sΓ} → {B : S.Type (S.cons sΓ A)} → ∀{s}
-    → AffineExp (Γ , A) (vd , b) B s → AffineExp Γ vd (S.Π A B) (S.lambda s)
-  var : {sΓ : S.Ctx} → {Γ : Context sΓ} → {T : S.Type sΓ} → {s : S.Exp sΓ T}
-    → (x : Var Γ T s) → AffineExp {sΓ} Γ (oneVars Γ x) T s
-  app : {sΓ : S.Ctx} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ}
-      → {A : S.Type sΓ} → {B : S.Type (S.cons sΓ A)} → ∀{s₁ s₂}
-      → AffineExp Γ Γ₁ (S.Π A B) s₁ → (x : AffineExp Γ Γ₂ A s₂)
+  lambda : AffineExp (Γ , A) (vd , b) B s
+    → AffineExp Γ vd (S.Π A B) (S.lambda s)
+  var : (x : Var Γ T s) → AffineExp {sΓ} Γ (oneVars Γ x) T s
+  app : AffineExp Γ Γ₁ (S.Π A B) s₁ → (x : AffineExp Γ Γ₂ A s₂)
       → Check Γ₁ Γ₂ Γ₃
       → AffineExp Γ Γ₃ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
-  Π₀ : {b : Bool} → {sΓ : S.Ctx} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ}
-    → {s₁ : S.Type₀ sΓ} → {s₂ : S.Type₀ (S.cons sΓ s₁)}
-    → AffineExp Γ Γ₁ S.U₀ s₁ → AffineExp (Γ , s₁) (Γ₂ , b) S.U₀ s₂
-    → Check Γ₁ Γ₂ Γ₃
+  Π₀ : AffineExp Γ Γ₁ S.U₀ s₁
+    → AffineExp (Γ , s₁) (Γ₂ , b) S.U₀ s₂ → Check Γ₁ Γ₂ Γ₃
     → AffineExp Γ Γ₃ S.U₀ (S.Π₀ s₁ s₂)
-  Π₁ : {b : Bool} → {sΓ : S.Ctx} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ}
-    → {s₁ : S.Type₁ sΓ} → {s₂ : S.Type₁ (S.cons sΓ s₁)}
-    → AffineExp Γ Γ₁ S.U₁ s₁ → AffineExp (Γ , s₁) (Γ₂ , b) S.U₁ s₂
-    → Check Γ₁ Γ₂ Γ₃
+  Π₁ : AffineExp Γ Γ₁ S.U₁ s₁
+    → AffineExp (Γ , s₁) (Γ₂ , b) S.U₁ s₂ → Check Γ₁ Γ₂ Γ₃
     → AffineExp Γ Γ₃ S.U₁ (S.Π₁ s₁ s₂)
-  U₀ : {sΓ : S.Ctx} → {Γ : Context sΓ} → AffineExp {sΓ} Γ (noneVars) S.U₁ S.U₀
+  U₀ : AffineExp {sΓ} Γ (noneVars) S.U₁ S.U₀
 \end{code}
 
---------------------------------------------------------------------------------
-checkAffine
+
+POINTER checkAffine
 
 \begin{code}
-checkAffine : ∀{sΓ Γ T t} → Exp {sΓ} Γ T t
-  → Maybe (Σ {j} {j} (VarData Γ) (λ vd → AffineExp {sΓ} Γ vd T t))
+checkAffine : Exp Γ T t
+  → Maybe (Σ (VarData Γ) (λ vd → AffineExp Γ vd T t))
 checkAffine (lambda e) with checkAffine e
 ... | nothing = nothing
-... | just ((vd , false) , Ae) = just (vd , lambda Ae) -- would be nothing if linear
+... | just ((vd , false) , Ae) = just (vd , lambda Ae)
 ... | just ((vd , true) , Ae) = just (vd , lambda Ae)
 checkAffine (var icx) = just (oneVars _ icx , var icx)
 checkAffine (app e₁ e₂) with checkAffine e₁ | checkAffine e₂
@@ -126,9 +126,7 @@ checkAffine U₀ = just (noneVars ,  U₀)
 
 \end{code}
 
---------------------------------------------------------------------------------
-
-Examples
+POINTER - Examples
 \begin{code}
 ex1 : AffineExp ∅ ∅ (λ _ → (Set → Set)) _
 ex1 = lambda (var same)
@@ -144,12 +142,4 @@ ex2 = lambda (lambda (var same))
 
 test2 : checkAffine ex2 ≡ just (_ , lambda (lambda (var same)))
 test2 = refl
-
-testo : ∀{sΓ Γ T t} → Exp {sΓ} Γ T t → {!   !}
-testo (lambda e) = {!   !}
-testo (var x) = {!   !}
-testo (app e e₁) = {! e  !}
-testo (Π₀ e e₁) = {!   !}
-testo (Π₁ e e₁) = {!   !}
-testo U₀ = {!   !}
 \end{code}

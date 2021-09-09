@@ -27,7 +27,6 @@ same = λ (γ , t) → t
 next : ∀{Γ T A} → Var Γ A → Var (cons Γ T) A
 next x = λ (γ , t) → x γ
 
-
 var : ∀{Γ T} → (icx : Var Γ T) → Exp Γ T
 var x = x
 lambda : ∀{Γ A B} → Exp (cons Γ A) B → Exp Γ (A ⇒ B)
