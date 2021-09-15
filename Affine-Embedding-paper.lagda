@@ -75,18 +75,21 @@ oneVars .(_ , _) (next x) = oneVars _ x , false
 POINTER - Main definition
 
 \begin{code}
-
 data AffineExp : (Γ : Context sΓ) → VarData Γ
   → (T : S.Type sΓ) → S.Exp sΓ T → Set j where
-  lambda : AffineExp (Γ , A) (vd , b) B s
-    → AffineExp Γ vd (S.Π A B) (S.lambda s)
-  var : (x : Var Γ T s) → AffineExp {sΓ} Γ (oneVars Γ x) T s
   app : AffineExp Γ Γ₁ (S.Π A B) s₁ → (x : AffineExp Γ Γ₂ A s₂)
       → Check Γ₁ Γ₂ Γ₃
       → AffineExp Γ Γ₃ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
-  Π₀ : AffineExp Γ Γ₁ S.U₀ s₁
-    → AffineExp (Γ , s₁) (Γ₂ , b) S.U₀ s₂ → Check Γ₁ Γ₂ Γ₃
-    → AffineExp Γ Γ₃ S.U₀ (S.Π₀ s₁ s₂)
+  Π : AffineExp Γ Γ₁ S.U s₁
+    → AffineExp (Γ , s₁) (Γ₂ , b) S.U s₂ → Check Γ₁ Γ₂ Γ₃
+    → AffineExp Γ Γ₃ S.U (S.Π s₁ s₂)
+  -- ...
+\end{code}
+POINTER
+\begin{code}
+  lambda : AffineExp (Γ , A) (vd , b) B s
+    → AffineExp Γ vd (S.Π A B) (S.lambda s)
+  var : (x : Var Γ T s) → AffineExp {sΓ} Γ (oneVars Γ x) T s
   Π₁ : AffineExp Γ Γ₁ S.U₁ s₁
     → AffineExp (Γ , s₁) (Γ₂ , b) S.U₁ s₂ → Check Γ₁ Γ₂ Γ₃
     → AffineExp Γ Γ₃ S.U₁ (S.Π₁ s₁ s₂)
@@ -94,11 +97,16 @@ data AffineExp : (Γ : Context sΓ) → VarData Γ
 \end{code}
 
 
-POINTER checkAffine
+POINTER checkAffine declaration
 
 \begin{code}
 checkAffine : Exp Γ T t
   → Maybe (Σ (VarData Γ) (λ vd → AffineExp Γ vd T t))
+\end{code}
+
+POINTER - checkAffine definition
+
+\begin{code}
 checkAffine (lambda e) with checkAffine e
 ... | nothing = nothing
 ... | just ((vd , false) , Ae) = just (vd , lambda Ae)

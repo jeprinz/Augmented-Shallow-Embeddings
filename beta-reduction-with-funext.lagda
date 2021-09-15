@@ -70,7 +70,7 @@ mutual
   ⟦_⟧ {suc n} T = ⟦ T ⟧ₙ₊₁
 
 ------------------------  "Shallow" embedding   --------------------------------
-module S where
+module Sᵀ where
 
   Ctx = Set
   Type : ℕ → Ctx → Set
@@ -143,61 +143,61 @@ module S where
 
 -------------------- Augmented "shallow" embedding -----------------------------
 
-data Context : S.Ctx → Set₁ where
-  ∅ : Context S.nil
-  _,_ : ∀{n SΓ} → (ctx : Context SΓ) → (T : S.Type n SΓ) → Context (S.cons SΓ T)
+data Context : Sᵀ.Ctx → Set₁ where
+  ∅ : Context Sᵀ.nil
+  _,_ : ∀{n SΓ} → (ctx : Context SΓ) → (T : Sᵀ.Type n SΓ) → Context (Sᵀ.cons SΓ T)
 
-data Var : ∀{n} → {SΓ : S.Ctx} → (Γ : Context SΓ) → (T : S.Type n SΓ)
-  → S.Term SΓ T → Set₁ where
-  same : ∀{n SΓ} → {T : S.Type n SΓ} → {Γ : Context SΓ}
-    → Var {n} (Γ , T) (S.weakenT T T) (S.same T)
-  next : ∀{n m SΓ Γ A a} → {T : S.Type n SΓ} → Var {m} {SΓ} Γ A a
-    → Var (Γ , T) (S.weakenT T A) (S.next A T a)
+data Var : ∀{n} → {SΓ : Sᵀ.Ctx} → (Γ : Context SΓ) → (T : Sᵀ.Type n SΓ)
+  → Sᵀ.Term SΓ T → Set₁ where
+  same : ∀{n SΓ} → {T : Sᵀ.Type n SΓ} → {Γ : Context SΓ}
+    → Var {n} (Γ , T) (Sᵀ.weakenT T T) (Sᵀ.same T)
+  next : ∀{n m SΓ Γ A a} → {T : Sᵀ.Type n SΓ} → Var {m} {SΓ} Γ A a
+    → Var (Γ , T) (Sᵀ.weakenT T A) (Sᵀ.next A T a)
 
-data Exp : ∀{n} → {SΓ : S.Ctx} → (Γ : Context SΓ) → (T : S.Type n SΓ)
-  → S.Term SΓ T → Set₁ where
-  lambda : ∀{n SΓ} → {Γ : Context SΓ} → {A : S.Type (suc n) SΓ}
-    → {B : S.Type (suc n) (S.cons SΓ A)} → ∀{a}
-    → Exp (Γ , A) B a → Exp Γ (S.Π A B) (S.lambda {n} {SΓ} {A} {B} a)
-  var : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → {T : S.Type n SΓ}
-    → {a : S.Term SΓ T} → (icx : Var Γ T a) → Exp {n} {SΓ} Γ T a
-  app : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → {A : S.Type (suc n) SΓ}
-      → {B : S.Type (suc n) (S.cons SΓ A)} → ∀{a₁ a₂}
-      → Exp {suc n} Γ (S.Π A B) a₁ → (x : Exp {suc n} Γ A a₂)
-      → Exp {suc n} Γ (λ γ → B (γ , a₂ γ)) (S.app A B a₁ a₂)
-  Π : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → {a₁ : S.Term SΓ (S.U {suc n})}
-    → {a₂ : S.Type (suc n) (S.cons SΓ a₁)} → (A : Exp Γ (S.U {suc n}) a₁)
-    → (B : Exp (Γ , a₁) (S.U {suc n}) a₂)
-    → Exp Γ (S.U {suc n}) (S.Π {n} a₁ a₂)
-  U : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → Exp {suc (suc n)} {SΓ} Γ S.U S.U
+data Exp : ∀{n} → {SΓ : Sᵀ.Ctx} → (Γ : Context SΓ) → (T : Sᵀ.Type n SΓ)
+  → Sᵀ.Term SΓ T → Set₁ where
+  lambda : ∀{n SΓ} → {Γ : Context SΓ} → {A : Sᵀ.Type (suc n) SΓ}
+    → {B : Sᵀ.Type (suc n) (Sᵀ.cons SΓ A)} → ∀{a}
+    → Exp (Γ , A) B a → Exp Γ (Sᵀ.Π A B) (Sᵀ.lambda {n} {SΓ} {A} {B} a)
+  var : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → {T : Sᵀ.Type n SΓ}
+    → {a : Sᵀ.Term SΓ T} → (icx : Var Γ T a) → Exp {n} {SΓ} Γ T a
+  app : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → {A : Sᵀ.Type (suc n) SΓ}
+      → {B : Sᵀ.Type (suc n) (Sᵀ.cons SΓ A)} → ∀{a₁ a₂}
+      → Exp {suc n} Γ (Sᵀ.Π A B) a₁ → (x : Exp {suc n} Γ A a₂)
+      → Exp {suc n} Γ (λ γ → B (γ , a₂ γ)) (Sᵀ.app A B a₁ a₂)
+  Π : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → {a₁ : Sᵀ.Term SΓ (Sᵀ.U {suc n})}
+    → {a₂ : Sᵀ.Type (suc n) (Sᵀ.cons SΓ a₁)} → (A : Exp Γ (Sᵀ.U {suc n}) a₁)
+    → (B : Exp (Γ , a₁) (Sᵀ.U {suc n}) a₂)
+    → Exp Γ (Sᵀ.U {suc n}) (Sᵀ.Π {n} a₁ a₂)
+  U : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → Exp {suc (suc n)} {SΓ} Γ Sᵀ.U Sᵀ.U
   -- Eweaken : ∀{n} → {SΓ : Ctx} → {Γ : Context SΓ} → {T : Type n SΓ}
     -- → {A : Type n SΓ} → ∀{a}
     -- → Exp Γ T a → Exp (Γ , A) (λ γ → (T (proj₁ γ))) (Sweaken {_} {_} {T} {A} a)
-  raise : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → {T : S.Type n SΓ} → ∀{a}
-    → Exp Γ T a → Exp Γ (S.cumuT T) (S.raise T a)
-  lower : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → {T : S.Type n SΓ} → ∀{a}
-    → Exp Γ (S.cumuT T) (S.raise T a) → Exp Γ T a
-  cumuT : ∀{n} → {SΓ : S.Ctx} → {Γ : Context SΓ} → ∀{a}
-    → Exp Γ (S.U {n}) a → Exp Γ (S.U {suc n}) (S.cumuT a)
+  raise : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → {T : Sᵀ.Type n SΓ} → ∀{a}
+    → Exp Γ T a → Exp Γ (Sᵀ.cumuT T) (Sᵀ.raise T a)
+  lower : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → {T : Sᵀ.Type n SΓ} → ∀{a}
+    → Exp Γ (Sᵀ.cumuT T) (Sᵀ.raise T a) → Exp Γ T a
+  cumuT : ∀{n} → {SΓ : Sᵀ.Ctx} → {Γ : Context SΓ} → ∀{a}
+    → Exp Γ (Sᵀ.U {n}) a → Exp Γ (Sᵀ.U {suc n}) (Sᵀ.cumuT a)
 
   -- Renamings and Substitutions on Exp
 
-Ren : ∀{sΓ₁ sΓ₂} → S.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
-Ren sub Γ₁ Γ₂ = ∀{n T t} → Var {n} Γ₁ T t → Var Γ₂ (S.subType sub T) (S.subExp T sub t)
+Ren : ∀{sΓ₁ sΓ₂} → Sᵀ.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
+Ren sub Γ₁ Γ₂ = ∀{n T t} → Var {n} Γ₁ T t → Var Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp T sub t)
 
-idRen : ∀{sΓ Γ} → Ren {sΓ} S.idSub Γ Γ
+idRen : ∀{sΓ Γ} → Ren {sΓ} Sᵀ.idSub Γ Γ
 idRen x = x
 
-lift : ∀{n sΓ₁ sΓ₂ T} → {sub : S.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
-  → Ren sub Γ₁ Γ₂ → Ren (S.lift {_} {_} {n} sub T) (Γ₁ , T) (Γ₂ , S.subType sub T)
+lift : ∀{n sΓ₁ sΓ₂ T} → {sub : Sᵀ.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
+  → Ren sub Γ₁ Γ₂ → Ren (Sᵀ.lift {_} {_} {n} sub T) (Γ₁ , T) (Γ₂ , Sᵀ.subType sub T)
 lift ren same = same
 lift ren (next x) = next (ren x)
 
-weaken1Ren : ∀{sΓ Γ n T} → Ren {sΓ} (S.weaken1Ren {sΓ} {n} {T}) Γ (Γ , T)
+weaken1Ren : ∀{sΓ Γ n T} → Ren {sΓ} (Sᵀ.weaken1Ren {sΓ} {n} {T}) Γ (Γ , T)
 weaken1Ren = next
 
-renExp : ∀{n sΓ₁ sΓ₂ T t} → {sub : S.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
-  → Ren sub Γ₁ Γ₂ → Exp {n} Γ₁ T t → Exp Γ₂ (S.subType sub T) (S.subExp T sub t)
+renExp : ∀{n sΓ₁ sΓ₂ T t} → {sub : Sᵀ.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
+  → Ren sub Γ₁ Γ₂ → Exp {n} Γ₁ T t → Exp Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp T sub t)
 renExp ren (lambda e) = lambda (renExp (lift ren) e)
 renExp ren (var x) = var (ren x)
 renExp ren (app e₁ e₂) = app (renExp ren e₁) (renExp ren e₂)
@@ -207,19 +207,19 @@ renExp ren (cumuT e) = cumuT (renExp ren e)
 renExp ren (raise e) = raise (renExp ren e)
 renExp ren (lower e) = lower (renExp ren e)
 
-Sub : ∀{sΓ₁ sΓ₂} → S.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
-Sub sub Γ₁ Γ₂ = ∀{n T t} → Var {n} Γ₁ T t → Exp Γ₂ (S.subType sub T) (S.subExp T sub t)
+Sub : ∀{sΓ₁ sΓ₂} → Sᵀ.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
+Sub sub Γ₁ Γ₂ = ∀{n T t} → Var {n} Γ₁ T t → Exp Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp T sub t)
 
-idSub : ∀{sΓ Γ} → Sub {sΓ} S.idSub Γ Γ
+idSub : ∀{sΓ Γ} → Sub {sΓ} Sᵀ.idSub Γ Γ
 idSub x = var x
 
-liftSub : ∀{n sΓ₁ sΓ₂ T} → {sub : S.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
-  → Sub sub Γ₁ Γ₂ → Sub (S.lift {_} {_} {n} sub T) (Γ₁ , T) (Γ₂ , S.subType sub T)
+liftSub : ∀{n sΓ₁ sΓ₂ T} → {sub : Sᵀ.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
+  → Sub sub Γ₁ Γ₂ → Sub (Sᵀ.lift {_} {_} {n} sub T) (Γ₁ , T) (Γ₂ , Sᵀ.subType sub T)
 liftSub sub same = var same
 liftSub sub (next x) = renExp weaken1Ren (sub x)
 
-subExp : ∀{n sΓ₁ sΓ₂ T t} → {sub : S.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
-  → Sub sub Γ₁ Γ₂ → Exp {n} Γ₁ T t → Exp Γ₂ (S.subType sub T) (S.subExp T sub t)
+subExp : ∀{n sΓ₁ sΓ₂ T t} → {sub : Sᵀ.Sub sΓ₁ sΓ₂} → {Γ₁ : Context sΓ₁} → {Γ₂ : Context sΓ₂}
+  → Sub sub Γ₁ Γ₂ → Exp {n} Γ₁ T t → Exp Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp T sub t)
 subExp sub (lambda e) = lambda (subExp (liftSub sub) e)
 subExp sub (var x) = sub x
 subExp sub (app e₁ e₂) = app (subExp sub e₁) (subExp sub e₂)
@@ -229,9 +229,9 @@ subExp sub (cumuT e) = cumuT (subExp sub e)
 subExp sub (raise e) = raise (subExp sub e)
 subExp sub (lower e) = lower (subExp sub e)
 
-extend : ∀{sΓ₁ sΓ₂ n Γ₁ Γ₂ sub} → {T : S.Type n sΓ₁} → {t : S.Term sΓ₁ T}
+extend : ∀{sΓ₁ sΓ₂ n Γ₁ Γ₂ sub} → {T : Sᵀ.Type n sΓ₁} → {t : Sᵀ.Term sΓ₁ T}
   → Sub {sΓ₁} {sΓ₂} sub Γ₁ Γ₂
-  → Exp Γ₁ T t → Sub (S.extend T sub t) (Γ₁ , T) Γ₂
+  → Exp Γ₁ T t → Sub (Sᵀ.extend T sub t) (Γ₁ , T) Γ₂
 extend sub e same = subExp sub e
 extend sub e (next x) = sub x
 
@@ -249,12 +249,12 @@ Eq3 {l} {P} {Q} {R} a₁ a₂ b₁ b₂ c₁ c₂
   = _≡_ {l} {Σ P (λ a → Σ (Q a) (R a))} (a₁ , b₁ , c₁) (a₂ , b₂ , c₂)
 
 maybeLamImpl : ∀{n SΓ Γ T t} → Exp {suc n} {SΓ} Γ T t
-  → Maybe (Σ (S.Type (suc n) SΓ)
-          (λ A → Σ (S.Type (suc n) (S.cons SΓ A))
-          (λ B → Σ (S.Term (S.cons SΓ A) B)
+  → Maybe (Σ (Sᵀ.Type (suc n) SΓ)
+          (λ A → Σ (Sᵀ.Type (suc n) (Sᵀ.cons SΓ A))
+          (λ B → Σ (Sᵀ.Term (Sᵀ.cons SΓ A) B)
           (λ t' → Σ (_≡_ {_} {(γ : SΓ) → Σ (TypeCode (suc n)) ⟦_⟧}
             (λ γ → (T γ , t γ))
-            (λ γ → ((S.Π A B) γ , λ a → t' (γ , a))))
+            (λ γ → ((Sᵀ.Π A B) γ , λ a → t' (γ , a))))
           (λ p → Exp (Γ , A) B t')))))
 maybeLamImpl (lambda e) = just (_ , _ , _ , refl , e)
 maybeLamImpl _ = nothing
@@ -268,20 +268,24 @@ lemma : ∀{n} → {A A' : TypeCode (suc n)} → {B : ⟦ A ⟧ → TypeCode (su
   → Eq3 A A' B B' t t'
 lemma refl = refl
 
-theorem : ∀{n Γ} → {A A' : S.Type (suc n) Γ}
-  → {B : S.Type (suc n) (S.cons Γ A)}
-  → {B' : S.Type (suc n) (S.cons Γ A')}
-  → {t : S.Term (S.cons Γ A) B}
-  → {t' : S.Term (S.cons Γ A') B'}
+theorem : ∀{n Γ} → {A A' : Sᵀ.Type (suc n) Γ}
+  → {B : Sᵀ.Type (suc n) (Sᵀ.cons Γ A)}
+  → {B' : Sᵀ.Type (suc n) (Sᵀ.cons Γ A')}
+  → {t : Sᵀ.Term (Sᵀ.cons Γ A) B}
+  → {t' : Sᵀ.Term (Sᵀ.cons Γ A') B'}
   → _≡_ {_} {(γ : Γ) → Σ (TypeCode (suc n)) ⟦_⟧}
-      (λ γ → ((S.Π A B) γ , λ a → t (γ , a)))
-      (λ γ → ((S.Π A' B') γ , λ a → t' (γ , a)))
+      (λ γ → ((Sᵀ.Π A B) γ , λ a → t (γ , a)))
+      (λ γ → ((Sᵀ.Π A' B') γ , λ a → t' (γ , a)))
   → Eq3 A A' B B' t t'
 theorem p
-   = cong (λ f → (proj₁ ∘ f , (λ (γ , a) → proj₁ (proj₂ (f γ)) a) , λ (γ , a) → proj₂ (proj₂ (f γ)) a))
-      (funExt (λ γ → lemma (happly p γ)))
+   -- = cong (λ f → {!   !} )
+      -- (funExt (λ γ → lemma (happly p γ)))
+  = {! funExt  !}
+   -- = cong (λ f → (proj₁ ∘ f , (λ (γ , a) → proj₁ (proj₂ (f γ)) a) , λ (γ , a) → proj₂ (proj₂ (f γ)) a))
+      -- (funExt (λ γ → lemma (happly p γ)))
 
-maybeLam : ∀{n SΓ Γ A B t} → Exp {suc n} {SΓ} Γ (S.Π A B) t
+{-
+maybeLam : ∀{n SΓ Γ A B t} → Exp {suc n} {SΓ} Γ (Sᵀ.Π A B) t
   → Maybe (Exp (Γ , A) B (λ (γ , a) → t γ a))
 maybeLam {n} {SΓ} {Γ} e with maybeLamImpl e
 ... | nothing = nothing
@@ -300,7 +304,7 @@ maybeLam {n} {SΓ} {Γ} e with maybeLamImpl e
 ... | nothing = app (βreduce e₁) (βreduce e₂)
 ... | just e = subExp (extend idSub e₂) e
 
-term1 : Exp {2} ∅ S.U S.U
+term1 : Exp {2} ∅ Sᵀ.U Sᵀ.U
 term1 = app (lambda (var same)) U
 -- (λ x . x) U
 
@@ -308,6 +312,7 @@ term1 = app (lambda (var same)) U
 test : βreduce term1 ≡ U
 test = refl
 
+-}
 
 {-
 NOTE: the presence of funext implies some wierd things with shallow embeddings.

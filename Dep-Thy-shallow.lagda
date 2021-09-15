@@ -14,7 +14,7 @@ j = lsuc i -- type level 1+i
 Ctx : Set j
 Type : Ctx → Set j
 Var : (Γ : Ctx) → Type Γ → Set i
-Exp : (Γ : Ctx) → Type Γ → Set i
+Term : (Γ : Ctx) → Type Γ → Set i
 
 Ctx = Set i
 Type Γ = Γ → Set i
@@ -22,7 +22,7 @@ Type₀ = λ (Γ : Ctx) → Γ → Set₀
 Type₁ = λ (Γ : Ctx) → Γ → Set₁
 Type₂ = λ (Γ : Ctx) → Γ → Set₂
 Var Γ T = (γ : Γ) → T γ
-Exp Γ T = (γ : Γ) → T γ
+Term Γ T = (γ : Γ) → T γ
 
 ∅ : Ctx
 ∅ = ⊤
@@ -44,6 +44,9 @@ cons Γ T = Σ {i} {i} Γ T
 U₀ : ∀{Γ} → Type₁ Γ
 U₀ γ = Set₀
 
+U : ∀{Γ} → Type₁ Γ
+U γ = Set₀
+
 U₁ : ∀{Γ} → Type₂ Γ
 U₁ γ = Set₁
 
@@ -55,14 +58,17 @@ same = λ (γ , t) → t
 next : ∀{Γ T A} → Var Γ A → Var (cons Γ T) (weakenT A)
 next x = λ (γ , t) → x γ
 
-var : ∀{Γ T} → (icx : Var Γ T) → Exp Γ T
+var : ∀{Γ T} → (icx : Var Γ T) → Term Γ T
 var x = x
 
-lambda : ∀{Γ A B} → Exp (cons Γ A) B → Exp Γ (Π A B)
+lambda : ∀{Γ A B} → Term (cons Γ A) B → Term Γ (Π A B)
 lambda e = λ γ a → e (γ , a)
 
-app : ∀{Γ A B} → Exp Γ (Π A B) → (a : Exp Γ A) → Exp Γ (λ γ → B (γ , a γ))
+app : ∀{Γ A B} → Term Γ (Π A B) → (a : Term Γ A) → Term Γ (λ γ → B (γ , a γ))
 app e₁ e₂ = λ γ → (e₁ γ) (e₂ γ)
+
+cumu : ∀{Γ} → Term Γ U₀ → Term Γ U₁
+cumu T = T
 \end{code}
 
 \begin{code}
@@ -98,7 +104,7 @@ subType : ∀{Γ₁ Γ₂} → Sub Γ₁ Γ₂ → Type Γ₁ → Type Γ₂
 subType sub T = λ γ₂ → T (sub γ₂)
 
 subExp : ∀{Γ₁ Γ₂} → (sub : Sub Γ₁ Γ₂) → (T : Type Γ₁)
-  → Exp Γ₁ T → Exp Γ₂ (subType sub T)
+  → Term Γ₁ T → Term Γ₂ (subType sub T)
 subExp sub T t γ = t (sub γ)
 
 test : ∀{Γ₁ Γ₂} → {T : Type Γ₁} → {A : Type Γ₂} → (sub : Sub Γ₁ Γ₂)

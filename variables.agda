@@ -34,3 +34,6 @@ postulate
   Γ₃ : Ty
   aΓ : Ty
   vd : Ty
+  Typeᵢ₊₁ : Ty
+  idSub : Ty
+  _-_ : Ty

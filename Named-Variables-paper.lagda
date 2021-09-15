@@ -85,15 +85,6 @@ POINTER: var'
 
 findVar : (Γ : Context sΓ) → String → Maybe
   (Σ (Σ (S.Type sΓ) (S.Exp sΓ)) (λ (T , t) → Var Γ T t))
-findVar ∅ name = nothing
-findVar (Γ , a ∷ A) name
-  = if  ⌊ name ≟ a ⌋
-    then just ((S.subType (S.weaken1ren A) A , S.same) , same)
-    else map
-      (λ ((T , t) , x)
-        → (S.subType (S.weaken1ren A) T
-          , S.subExp (S.weaken1ren A) T t) , next x)
-      (findVar Γ name)
 
 resultType : (Γ : Context sΓ) → String → S.Type sΓ
 resultType Γ name with findVar Γ name

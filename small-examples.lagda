@@ -12,13 +12,14 @@ import Dep-Thy-shallow as S
 \end{code}
 
 \begin{code}
-lambdaCount : ∀{sΓ Γ T s} → Exp {sΓ} Γ T s → ℕ
-lambdaCount (lambda e) = 1 + (lambdaCount e)
-lambdaCount (var x) = 0
-lambdaCount (app e₁ e₂) = (lambdaCount e₁) + (lambdaCount e₂)
-lambdaCount (Π₀ A B) = (lambdaCount A) + (lambdaCount B)
-lambdaCount (Π₁ A B) = (lambdaCount A) + (lambdaCount B)
-lambdaCount U₀ = 0
+-- church numeral 2
+-- Type = (X : U) → (X → X) → X → X
+-- Term = λ X f x . f (f x)
+Nat : Exp ∅ (S.Π₁ S.U₀
+            (S.Π₀ (S.Π₀ (S.var S.same) (S.var (S.next S.same)))
+              (S.Π₀ (S.var (S.next S.same)) (S.var (S.next (S.next S.same)))))) _
+Nat = lambda (lambda (lambda (app (var (next same))
+                                    (app (var (next same)) (var same)))))
 \end{code}
 
 \begin{code}
@@ -44,19 +45,19 @@ _-_ : (n : ℕ) → Fin n → ℕ
 n - zero = n
 (suc n) - suc f = n - f
 
-compileToJs : ∀{sΓ Γ T s} → Exp {sΓ} Γ T s → String
-compileToJs {sΓ} {Γ} (lambda e) = "function(x" ++ (show (ctxLength Γ)) ++ "){" ++ compileToJs e ++ "}"
-compileToJs {sΓ} {Γ} (var x) = "x" ++ (show ((ctxLength Γ) - (varIndex x)))
-compileToJs (app e₁ e₂) = "(" ++ (compileToJs e₁) ++ " " ++ (compileToJs e₂) ++ ")"
-compileToJs (Π₀ e₁ e₂) = "null"
-compileToJs (Π₁ e₁ e₂) = "null"
-compileToJs U₀ = "null"
-
 example : Exp ∅ (λ _ → (X Y : Set) → (X → Y) → X → Y) _
 example = lambda (lambda (lambda (lambda (app (var (next same)) (var same)))))
 
-test : String
-test = compileToJs example
+-- Leibniz equality
+-- leibniz : ∀{Γ} → (T : S.Type Γ) → (a b : S.Exp Γ T) → S.Type Γ
+-- leibniz T a b = λ γ → (P : (T γ) →
+leibniz : (T : Set) → T → T → Set₁
+leibniz T a b = (P : T → Set) → P a → P b
 
-bla = {! test  !}
+trans : Exp ∅ (λ _ → (T : Set) → (a b c : T)
+  → leibniz T a b → leibniz T b c → leibniz T a c) _
+trans = lambda (lambda (lambda (lambda (lambda (lambda
+  (app (var (next same) ) (app {! var (next (next same))  !} (var same))))))))
+
+
 \end{code}

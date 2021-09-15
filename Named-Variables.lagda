@@ -10,6 +10,7 @@ open import Data.String
 open import Data.Maybe
 open import Data.Bool hiding (_≟_)
 open import Relation.Nullary.Decidable using (⌊_⌋)
+open import Function
 
 import Dep-Thy-shallow as S
 
@@ -50,6 +51,8 @@ data Exp : {sΓ : S.Ctx} → (Γ : Context sΓ) → (T : S.Type sΓ)
     → Exp Γ S.U₁ (S.Π₁ s₁ s₂)
   U₀ : {sΓ : S.Ctx} → {Γ : Context sΓ} → Exp {sΓ} Γ S.U₁ S.U₀
   ⋆ : ∀{sΓ} → {Γ : Context sΓ} → Exp Γ (λ _ → ⊤) (λ _ → tt)
+  cumu : ∀{sΓ} → {Γ : Context sΓ} → ∀{T}
+    → Exp Γ S.U₀ T → Exp Γ S.U₁ (S.cumu T)
 
 findVar : ∀{sΓ} → (Γ : Context sΓ) → String
   → Maybe (Σ {j} {j} (Σ {j} {i} (S.Type sΓ) (S.Exp sΓ)) (λ (T , t) → Var Γ T t))
@@ -78,6 +81,60 @@ var' {_} {Γ} name with findVar Γ name
 
 example2 : Exp ∅ (λ _ → (X : Set) → X → X) _
 example2 = lambda "X" (lambda "x" (var' "x"))
+
+-- Π₀ : {sΓ : S.Ctx} → {Γ : Context sΓ} → {s₁ : S.Type₀ sΓ}
+--   → {s₂ : S.Type₀ (S.cons sΓ s₁)}
+--   → (name : String)
+--   → (A : Exp Γ S.U₀ s₁)
+--   → (B : Exp (Γ , name ∷ s₁) S.U₀ s₂)
+--   → Exp Γ S.U₀ (S.Π₀ s₁ s₂)
+
+infixr 10 _⇒_
+_⇒_ : {sΓ : S.Ctx} → {Γ : Context sΓ} → {s₁ : S.Type₀ sΓ}
+  → {s₂ : S.Type₀ (S.cons sΓ s₁)}
+  → (A : Exp Γ S.U₀ s₁) → (B : Exp (Γ , "_" ∷ s₁) S.U₀ s₂)
+  → Exp Γ S.U₀ (S.Π₀ s₁ s₂)
+A ⇒ B = Π₀ "_" A B
+
+`_` = var'
+
+infixl 10 _^_
+_^_ : {sΓ : S.Ctx} → {Γ : Context sΓ} → {A : S.Type sΓ} → {B : S.Type (S.cons sΓ A)} → ∀{s₁ s₂}
+    → Exp Γ (S.Π A B) s₁ → (x : Exp Γ A s₂)
+    → Exp Γ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
+_^_ = app
+
+Nat : Exp ∅ S.U₁ _
+Nat = Π₁ "X" U₀ (cumu ((`"X"` ⇒ `"X"` ) ⇒ `"X"` ⇒ `"X"`))
+
+extract : ∀{sΓ Γ T t} → Exp {sΓ} Γ T t → S.Exp sΓ T
+extract {sΓ} {Γ} {T} {t} e = t
+
+two : Exp ∅ (extract Nat) _
+two = lambda "X" (lambda "f" (lambda "x"
+  (`"f"` ^ (`"f"` ^ `"x"`))))
+
+leibniz : (T : Set) → T → T → Set₁
+leibniz T a b = (P : T → Set) → P a → P b
+
+trans' : (T : Set) → (a b c : T)
+  → leibniz T a b → leibniz T b c → leibniz T a c
+trans' T a b c p₁ p₂ P x = p₂ P (p₁ P x)
+
+-- lambda : {sΓ : S.Ctx} → {Γ : Context sΓ} → {A : S.Type sΓ} → {B : S.Type (S.cons sΓ A)}
+  -- → ∀{s} → (name : String) → Exp (Γ , name ∷ A) B s → Exp Γ (S.Π A B) (S.lambda s)
+fun :
+{-
+IDEA: lambda that takes list of strings, maps to a bunch of lambdas. This
+is not just for fun, it really is something that can't be done with
+shallow embeddings.
+-}
+
+trans : Exp ∅ (λ _ → (T : Set) → (a b c : T)
+  → leibniz T a b → leibniz T b c → leibniz T a c) _
+trans = lambda "T" (lambda "a" (lambda "b" (lambda "c"
+  (lambda "p₁" (lambda "p₂" (lambda "P" (lambda "x"
+  (`"p₂"` ^ `"P"` ^ (`"p₁"` ^ `"P"` ^ `"x"`)))))))))
 
 -- Λ "X" - Λ "x" - var "x"
 --
