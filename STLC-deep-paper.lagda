@@ -12,10 +12,10 @@ data Var : (Γ : Ctx) → Type → Set where
   next : ∀{Γ T A} → Var Γ A → Var (Γ , T) A
 
 data Exp : Ctx → Type → Set where
-  var : ∀{Γ T} → (icx : Var Γ T) → Exp Γ T
+  var : ∀{Γ T} → Var Γ T → Exp Γ T
   lambda : ∀{Γ A B} → Exp (Γ , A) B
     → Exp Γ (A ⇒ B)
   app : ∀{Γ A B} → Exp Γ (A ⇒ B)
     → Exp Γ A → Exp Γ B
-  ⋆ : ∀{Γ} → Exp Γ base
+  tt : ∀{Γ} → Exp Γ base
 \end{code}

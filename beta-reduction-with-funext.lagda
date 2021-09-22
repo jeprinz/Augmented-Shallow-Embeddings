@@ -280,9 +280,15 @@ theorem : ∀{n Γ} → {A A' : Sᵀ.Type (suc n) Γ}
 theorem p
    -- = cong (λ f → {!   !} )
       -- (funExt (λ γ → lemma (happly p γ)))
-  = {! funExt  !}
    -- = cong (λ f → (proj₁ ∘ f , (λ (γ , a) → proj₁ (proj₂ (f γ)) a) , λ (γ , a) → proj₂ (proj₂ (f γ)) a))
       -- (funExt (λ γ → lemma (happly p γ)))
+   = funExt ?
+
+-- piece : (λ z →
+--     (A z , (λ a → B (z , a)) , (λ a → t (z , a))))
+--   ≡ (λ z →
+--       (A' z , (λ a → B' (z , a)) , (λ a → t' (z , a))))
+-- piece = funExt  (λ γ → lemma (happly p γ))
 
 {-
 maybeLam : ∀{n SΓ Γ A B t} → Exp {suc n} {SΓ} Γ (Sᵀ.Π A B) t

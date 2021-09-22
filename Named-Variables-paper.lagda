@@ -26,7 +26,6 @@ data Context : S.Ctx → Set j where
   ∅ : Context S.∅
   _,_∷_ : Context sΓ → String
     → (T : S.Type sΓ) → Context (S.cons sΓ T)
-
 \end{code}
 
 POINTER: Var type

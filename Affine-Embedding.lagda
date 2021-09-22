@@ -68,37 +68,37 @@ Main definition
 
 \begin{code}
 
-data AffineExp : {sΓ : S.Ctx} → (Γ : Context sΓ) → VarData Γ
-  → (T : S.Type sΓ) → S.Exp sΓ T → Set j where
+data AffineTerm : {sΓ : S.Ctx} → (Γ : Context sΓ) → VarData Γ
+  → (T : S.Type sΓ) → S.Term sΓ T → Set j where
   lambda : {b : Bool} → {sΓ : S.Ctx} → {Γ : Context sΓ} → {vd : VarData Γ}
     → {A : S.Type sΓ} → {B : S.Type (S.cons sΓ A)} → ∀{s}
-    → AffineExp (Γ , A) (vd , b) B s → AffineExp Γ vd (S.Π A B) (S.lambda s)
-  var : {sΓ : S.Ctx} → {Γ : Context sΓ} → {T : S.Type sΓ} → {s : S.Exp sΓ T}
-    → (x : Var Γ T s) → AffineExp {sΓ} Γ (oneVars Γ x) T s
+    → AffineTerm (Γ , A) (vd , b) B s → AffineTerm Γ vd (S.Π A B) (S.lambda s)
+  var : {sΓ : S.Ctx} → {Γ : Context sΓ} → {T : S.Type sΓ} → {s : S.Term sΓ T}
+    → (x : Var Γ T s) → AffineTerm {sΓ} Γ (oneVars Γ x) T s
   app : {sΓ : S.Ctx} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ}
       → {A : S.Type sΓ} → {B : S.Type (S.cons sΓ A)} → ∀{s₁ s₂}
-      → AffineExp Γ Γ₁ (S.Π A B) s₁ → (x : AffineExp Γ Γ₂ A s₂)
+      → AffineTerm Γ Γ₁ (S.Π A B) s₁ → (x : AffineTerm Γ Γ₂ A s₂)
       → Check Γ₁ Γ₂ Γ₃
-      → AffineExp Γ Γ₃ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
+      → AffineTerm Γ Γ₃ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
   Π₀ : {b : Bool} → {sΓ : S.Ctx} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ}
     → {s₁ : S.Type₀ sΓ} → {s₂ : S.Type₀ (S.cons sΓ s₁)}
-    → AffineExp Γ Γ₁ S.U₀ s₁ → AffineExp (Γ , s₁) (Γ₂ , b) S.U₀ s₂
+    → AffineTerm Γ Γ₁ S.U₀ s₁ → AffineTerm (Γ , s₁) (Γ₂ , b) S.U₀ s₂
     → Check Γ₁ Γ₂ Γ₃
-    → AffineExp Γ Γ₃ S.U₀ (S.Π₀ s₁ s₂)
+    → AffineTerm Γ Γ₃ S.U₀ (S.Π₀ s₁ s₂)
   Π₁ : {b : Bool} → {sΓ : S.Ctx} → {Γ : Context sΓ} → {Γ₁ Γ₂ Γ₃ : VarData Γ}
     → {s₁ : S.Type₁ sΓ} → {s₂ : S.Type₁ (S.cons sΓ s₁)}
-    → AffineExp Γ Γ₁ S.U₁ s₁ → AffineExp (Γ , s₁) (Γ₂ , b) S.U₁ s₂
+    → AffineTerm Γ Γ₁ S.U₁ s₁ → AffineTerm (Γ , s₁) (Γ₂ , b) S.U₁ s₂
     → Check Γ₁ Γ₂ Γ₃
-    → AffineExp Γ Γ₃ S.U₁ (S.Π₁ s₁ s₂)
-  U₀ : {sΓ : S.Ctx} → {Γ : Context sΓ} → AffineExp {sΓ} Γ (noneVars) S.U₁ S.U₀
+    → AffineTerm Γ Γ₃ S.U₁ (S.Π₁ s₁ s₂)
+  U₀ : {sΓ : S.Ctx} → {Γ : Context sΓ} → AffineTerm {sΓ} Γ (noneVars) S.U₁ S.U₀
 \end{code}
 
 --------------------------------------------------------------------------------
 checkAffine
 
 \begin{code}
-checkAffine : ∀{sΓ Γ T t} → Exp {sΓ} Γ T t
-  → Maybe (Σ {j} {j} (VarData Γ) (λ vd → AffineExp {sΓ} Γ vd T t))
+checkAffine : ∀{sΓ Γ T t} → Term {sΓ} Γ T t
+  → Maybe (Σ {j} {j} (VarData Γ) (λ vd → AffineTerm {sΓ} Γ vd T t))
 checkAffine (lambda e) with checkAffine e
 ... | nothing = nothing
 ... | just ((vd , false) , Ae) = just (vd , lambda Ae) -- would be nothing if linear
@@ -130,26 +130,18 @@ checkAffine U₀ = just (noneVars ,  U₀)
 
 Examples
 \begin{code}
-ex1 : AffineExp ∅ ∅ (λ _ → (Set → Set)) _
+ex1 : AffineTerm ∅ ∅ (λ _ → (Set → Set)) _
 ex1 = lambda (var same)
 
-ex1' : Exp ∅ (λ _ → (Set → Set)) _
+ex1' : Term ∅ (λ _ → (Set → Set)) _
 ex1' = lambda (var same)
 
 test1 : checkAffine ex1' ≡ just (_ , ex1)
 test1 = refl
 
-ex2 : Exp ∅ (λ _ → (X : Set) → X → X) _
+ex2 : Term ∅ (λ _ → (X : Set) → X → X) _
 ex2 = lambda (lambda (var same))
 
 test2 : checkAffine ex2 ≡ just (_ , lambda (lambda (var same)))
 test2 = refl
-
-testo : ∀{sΓ Γ T t} → Exp {sΓ} Γ T t → {!   !}
-testo (lambda e) = {!   !}
-testo (var x) = {!   !}
-testo (app e e₁) = {! e  !}
-testo (Π₀ e e₁) = {!   !}
-testo (Π₁ e e₁) = {!   !}
-testo U₀ = {!   !}
 \end{code}

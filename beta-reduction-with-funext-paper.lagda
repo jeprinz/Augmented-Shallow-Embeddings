@@ -23,46 +23,67 @@ happly refl x = refl
 
 \end{code}
 
-POINTER - TypeCode
+POINTER - new typecodes
 
 \begin{code}
-
-data TypeCode₀ : Set where
-⟦_⟧₀ : TypeCode₀ → Set
-⟦_⟧₀ ()
-
-module Universe {TypeCode : Set} {⟦_⟧ : TypeCode → Set} where
-  mutual
-    data TypeCodeₙ₊₁ : Set where
-        `U : TypeCodeₙ₊₁
-        `Π : (A : TypeCodeₙ₊₁) → (⟦_⟧ₙ₊₁ A → TypeCodeₙ₊₁) → TypeCodeₙ₊₁
-        `raise : TypeCode → TypeCodeₙ₊₁
-
-    ⟦_⟧ₙ₊₁ : TypeCodeₙ₊₁ → Set
-    ⟦ `U ⟧ₙ₊₁ = TypeCode
-    ⟦ `Π A B ⟧ₙ₊₁ = (a : ⟦ A ⟧ₙ₊₁) → ⟦ B a ⟧ₙ₊₁
-    ⟦ `raise T ⟧ₙ₊₁ = ⟦ T ⟧
-
-open Universe
-
 mutual
-  TypeCode : ℕ → Set
-  TypeCode zero = TypeCode₀
-  TypeCode (suc n) = TypeCodeₙ₊₁ {TypeCode n} {⟦_⟧}
+  data TypeCode : ℕ → Set where
+    `U : TypeCode (suc n)
+    `Π : (A : TypeCode n)
+      → (⟦ A ⟧ → TypeCode n) → TypeCode n
+    `raise : TypeCode n → TypeCode (suc n)
 
-  ⟦_⟧ : {n : ℕ} → TypeCode n → Set
-  ⟦_⟧ {zero} T = ⟦ T ⟧₀
-  ⟦_⟧ {suc n} T = ⟦ T ⟧ₙ₊₁
+  ⟦_⟧ : TypeCode n → Set
+  ⟦ `U ⟧ = TypeCode n
+  ⟦ `Π A B ⟧ = (a : ⟦ A ⟧) → ⟦ B a ⟧
+  ⟦ `raise T ⟧ = ⟦ T ⟧
+\end{code}
 
+POINTER - TypeCode -old
+
+\begin{code}
+--
+-- data TypeCode₀ : Set where
+-- ⟦_⟧₀ : TypeCode₀ → Set
+-- ⟦_⟧₀ ()
+--
+-- module Universe {TypeCode : Set} {⟦_⟧ : TypeCode → Set} where
+--   mutual
+--     data TypeCodeₙ₊₁ : Set where
+--         `U : TypeCodeₙ₊₁
+--         `Π : (A : TypeCodeₙ₊₁) → (⟦_⟧ₙ₊₁ A → TypeCodeₙ₊₁) → TypeCodeₙ₊₁
+--         `raise : TypeCode → TypeCodeₙ₊₁
+--
+--     ⟦_⟧ₙ₊₁ : TypeCodeₙ₊₁ → Set
+--     ⟦ `U ⟧ₙ₊₁ = TypeCode
+--     ⟦ `Π A B ⟧ₙ₊₁ = (a : ⟦ A ⟧ₙ₊₁) → ⟦ B a ⟧ₙ₊₁
+--     ⟦ `raise T ⟧ₙ₊₁ = ⟦ T ⟧
+--
+-- open Universe
+--
+-- mutual
+--   TypeCode : ℕ → Set
+--   TypeCode zero = TypeCode₀
+--   TypeCode (suc n) = TypeCodeₙ₊₁ {TypeCode n} {⟦_⟧}
+--
+--   ⟦_⟧ : {n : ℕ} → TypeCode n → Set
+--   ⟦_⟧ {zero} T = ⟦ T ⟧₀
+--   ⟦_⟧ {suc n} T = ⟦ T ⟧ₙ₊₁
+--
 \end{code}
 
 ------------------------  "Shallow" embedding   --------------------------------
-POINTER - shallow embedding with typecodes
+
+POINTER
 
 \begin{code}
+module S where
+\end{code}
 
-module Sᵀ where
+POINTER - shallow embedding with typecodes
 
+\begin{AgdaSuppressSpace}
+\begin{code}
   Ctx = Set
   Type : ℕ → Ctx → Set
   Type n Γ = Γ → TypeCode n
@@ -78,9 +99,11 @@ module Sᵀ where
   U : ∀{n} → Type (suc n) Γ
   U = λ _ → `U
 
-  Π : (A : Type (suc n) Γ) → Type (suc n) (cons Γ A) → Type (suc n) Γ
+  Π : (A : Type (suc n) Γ)
+    → Type (suc n) (cons Γ A) → Type (suc n) Γ
   Π A B = λ γ → `Π (A γ) ((λ a → B (γ , a)))
 \end{code}
+\end{AgdaSuppressSpace}
 
 POINTER - Sub in shallow embedding - no typecodes
 
@@ -94,15 +117,15 @@ POINTER - Sub in shallow embedding - no typecodes
   extend sub e γ₂ = sub γ₂ , e (sub γ₂)
 
   subType : Sub Γ₁ Γ₂ → Type Γ₁ → Type Γ₂
-  subType sub T = λ γ₂ → T (sub γ₂)
+  subType sub T =   λ γ₂ → T (sub γ₂)
 
   lift : (sub : Sub Γ₁ Γ₂) → (T : Type Γ₁)
     → Sub (cons Γ₁ T) (cons Γ₂ (subType sub T))
   lift sub T (γ , t) = sub γ , t
 
-  subExp : (sub : Sub Γ₁ Γ₂)
+  subTerm : (sub : Sub Γ₁ Γ₂)
     → Term Γ₁ T → Term Γ₂ (subType {_} {_} {n} sub T)
-  subExp sub e = λ γ₂ → e (sub γ₂)
+  subTerm sub e = λ γ₂ → e (sub γ₂)
   -}
 
 \end{code}
@@ -157,19 +180,19 @@ POINTER - parts of shallow embedding with typecodes not included in paper:
     → Sub (cons Γ₁ T) (cons Γ₂ (subType sub T))
   lift sub T (γ , t) = sub γ , t
 
-  subExp : ∀{Γ₁ Γ₂ n} → (T : Type n Γ₁) → (sub : Sub Γ₁ Γ₂)
+  subTerm : ∀{Γ₁ Γ₂ n} → (T : Type n Γ₁) → (sub : Sub Γ₁ Γ₂)
     → Term Γ₁ T → Term Γ₂ (subType {_} {_} {n} sub T)
-  subExp T sub e = λ γ₂ → e (sub γ₂)
+  subTerm T sub e = λ γ₂ → e (sub γ₂)
 \end{code}
 
 POINTER - Augmented Shallow Embedding with Type Codes - parts included in paper
 
 \begin{code}
-data Context : Sᵀ.Ctx → Set
-data Var : ∀{n} → {SΓ : Sᵀ.Ctx} → (Γ : Context SΓ)
-  → (T : Sᵀ.Type n SΓ) → Sᵀ.Term SΓ T → Set
-data Exp : ∀{n} → {SΓ : Sᵀ.Ctx} → (Γ : Context SΓ)
-  → (T : Sᵀ.Type n SΓ) → Sᵀ.Term SΓ T → Set
+data Context : S.Ctx → Set
+data Var : ∀{n} → {SΓ : S.Ctx} → (Γ : Context SΓ)
+  → (T : S.Type n SΓ) → S.Term SΓ T → Set
+data Term : ∀{n} → {SΓ : S.Ctx} → (Γ : Context SΓ)
+  → (T : S.Type n SΓ) → S.Term SΓ T → Set
 \end{code}
 
 POINTER - Augmented Shallow Embedding with Type Codes - parts not included in paper
@@ -178,26 +201,26 @@ POINTER - Augmented Shallow Embedding with Type Codes - parts not included in pa
 -------------------- Augmented "shallow" embedding -----------------------------
 
 data Context where
-  ∅ : Context Sᵀ.nil
-  _,_ : (ctx : Context SΓ) → (T : Sᵀ.Type n SΓ) → Context (Sᵀ.cons SΓ T)
+  ∅ : Context S.nil
+  _,_ : (ctx : Context SΓ) → (T : S.Type n SΓ) → Context (S.cons SΓ T)
 
 data Var where
-  same : Var (Γ , T) (T ∘ proj₁) (Sᵀ.same T)
+  same : Var (Γ , T) (T ∘ proj₁) (S.same T)
   next : Var Γ A a
     → Var (Γ , T) (A ∘ proj₁) (a ∘ proj₁)
 
-data Exp where
-  lambda : Exp (Γ , A) B a → Exp Γ (Sᵀ.Π A B) (Sᵀ.lambda a)
-  var : (icx : Var Γ T a) → Exp Γ T a
-  app : Exp Γ (Sᵀ.Π A B) a₁ → (x : Exp Γ A a₂)
-      → Exp Γ (λ γ → B (γ , a₂ γ)) (Sᵀ.app A B a₁ a₂)
-  Π : (A : Exp Γ Sᵀ.U a)
-    → (B : Exp (Γ , a) Sᵀ.U b)
-    → Exp Γ Sᵀ.U(Sᵀ.Π a b)
-  U : Exp Γ (Sᵀ.U {suc n}) (Sᵀ.U {n})
-  raise : Exp Γ T a → Exp Γ (Sᵀ.cumuT T) (Sᵀ.raise a)
-  lower : Exp Γ (Sᵀ.cumuT T) (Sᵀ.raise T a) → Exp Γ T a
-  cumuT : Exp Γ (Sᵀ.U {n}) a → Exp Γ (Sᵀ.U {suc n}) (Sᵀ.cumuT a)
+data Term where
+  lambda : Term (Γ , A) B a → Term Γ (S.Π A B) (S.lambda a)
+  var : (icx : Var Γ T a) → Term Γ T a
+  app : Term Γ (S.Π A B) a₁ → (x : Term Γ A a₂)
+      → Term Γ (λ γ → B (γ , a₂ γ)) (S.app A B a₁ a₂)
+  Π : (A : Term Γ S.U a)
+    → (B : Term (Γ , a) S.U b)
+    → Term Γ S.U(S.Π a b)
+  U : Term Γ (S.U {suc n}) (S.U {n})
+  raise : Term Γ T a → Term Γ (S.cumuT T) (S.raise a)
+  lower : Term Γ (S.cumuT T) (S.raise T a) → Term Γ T a
+  cumuT : Term Γ (S.U {n}) a → Term Γ (S.U {suc n}) (S.cumuT a)
 
 \end{code}
 
@@ -205,65 +228,73 @@ POINTER - Renamings for augmented shallow
 
 \begin{code}
 
-Ren : ∀{sΓ₁ sΓ₂} → Sᵀ.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
-Ren sub Γ₁ Γ₂ = Var Γ₁ T t → Var Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp sub t)
+Ren : S.Sub sΓ₁ sΓ₂ → Context sΓ₁
+  → Context sΓ₂ → Set₁
+Ren sub Γ₁ Γ₂ = Var Γ₁ T t
+  → Var Γ₂ (S.subType sub T) (S.subTerm sub t)
 
-lift : Ren sub Γ₁ Γ₂ → Ren (Sᵀ.lift sub T) (Γ₁ , T) (Γ₂ , Sᵀ.subType sub T)
+lift : Ren sub Γ₁ Γ₂
+  → Ren (S.lift sub T) (Γ₁ , T) (Γ₂ , S.subType sub T)
 
-renExp : Ren sub Γ₁ Γ₂ → Exp Γ₁ T t → Exp Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp sub t)
-renExp ren (lambda e) = lambda (renExp (lift ren) e)
-renExp ren (var x) = var (ren x)
-renExp ren (app e₁ e₂) = app (renExp ren e₁) (renExp ren e₂)
-renExp ren (Π A B) = Π (renExp ren A) (renExp (lift ren) B)
-renExp ren U = U
+renTerm : Ren sub Γ₁ Γ₂ → Term Γ₁ T t
+  → Term Γ₂ (S.subType sub T) (S.subTerm sub t)
+renTerm ren (lambda e) = lambda (renTerm (lift ren) e)
+renTerm ren (var x) = var (ren x)
+renTerm ren (app e₁ e₂)
+  = app (renTerm ren e₁) (renTerm ren e₂)
+renTerm ren (Π A B)
+  = Π (renTerm ren A) (renTerm (lift ren) B)
+renTerm ren U = U
 
 \end{code}
 
 POINTER - sub for aug shal
 
 \begin{code}
+Sub : S.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
+Sub sub Γ₁ Γ₂ = Var Γ₁ T t
+  → Term Γ₂ (S.subType sub T) (S.subTerm sub t)
 
-Sub : Sᵀ.Sub sΓ₁ sΓ₂ → Context sΓ₁ → Context sΓ₂ → Set₁
-Sub sub Γ₁ Γ₂ = Var Γ₁ T t → Exp Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp sub t)
+liftSub : Sub sub Γ₁ Γ₂
+  → Sub (S.lift sub) (Γ₁ , T) (Γ₂ , S.subType sub T)
+liftSub sub same = var same
+liftSub sub (next x) = renTerm next (sub x)
 
-liftSub : Sub sub Γ₁ Γ₂ → Sub (Sᵀ.lift sub) (Γ₁ , T) (Γ₂ , Sᵀ.subType sub T)
-
-subExp : Sub sub Γ₁ Γ₂ → Exp {n} Γ₁ T t → Exp Γ₂ (Sᵀ.subType sub T) (Sᵀ.subExp sub t)
-subExp sub (lambda e) = lambda (subExp (liftSub sub) e)
-subExp sub (var x) = sub x
-subExp sub (app e₁ e₂) = app (subExp sub e₁) (subExp sub e₂)
-subExp sub (Π A B) = Π (subExp sub A) (subExp (liftSub sub) B)
-subExp sub U = U
-
+subTerm : Sub sub Γ₁ Γ₂ → Term Γ₁ T t
+  → Term Γ₂ (S.subType sub T) (S.subTerm sub t)
+subTerm sub (lambda e) = lambda (subTerm (liftSub sub) e)
+subTerm sub (var x) = sub x
+subTerm sub (app e₁ e₂)
+  = app (subTerm sub e₁) (subTerm sub e₂)
+subTerm sub (Π A B)
+  = Π (subTerm sub A) (subTerm (liftSub sub) B)
+subTerm sub U = U
 \end{code}
 
 POINTER - extend
 
 \begin{code}
-
-extend : Sub sub Γ₁ Γ₂ → Exp Γ₁ T t → Sub (Sᵀ.extend sub t) (Γ₁ , T) Γ₂
-extend sub e same = subExp sub e
+extend : Sub sub Γ₁ Γ₂ → Term Γ₁ T t
+  → Sub (S.extend sub t) (Γ₁ , T) Γ₂
+extend sub e same = subTerm sub e
 extend sub e (next x) = sub x
-
 \end{code}
-POINTER - maybeLamImpl
+
+POINTER - maybeLamImpl (remember to delete ᵀs before putting in latex)
 \begin{code}
-
---------------------------------------------------------------------------------
-
-maybeLamImpl : ∀{n SΓ Γ T t} → Exp {suc n} {SΓ} Γ T t
-  → Maybe (Σ (Sᵀ.Type (suc n) SΓ)
-          (λ A → Σ (Sᵀ.Type (suc n) (Sᵀ.cons SΓ A))
-          (λ B → Σ (Sᵀ.Term (Sᵀ.cons SΓ A) B)
-          (λ t' → Σ (_≡_ {_} {(γ : SΓ) → Σ (TypeCode (suc n)) ⟦_⟧}
-            (λ γ → (T γ , t γ))
-            (λ γ → ((Sᵀ.Π A B) γ , λ a → t' (γ , a))))
-          (λ p → Exp (Γ , A) B t')))))
+maybeLamImpl : Term Γ T t
+  → Maybe (Σ (S.Type (suc n) SΓ)
+          (λ A → Σ (S.Type (suc n) (S.cons SΓ A))
+          (λ B → Σ (S.Term (S.cons SΓ A) B)
+          (λ t' → Σ ((λ γ → (T γ , t γ)) ≡
+            (λ γ → ((S.Π A B) γ , λ a → t' (γ , a))))
+          (λ p → Term (Γ , A) B t')))))
 maybeLamImpl (lambda e) = just (_ , _ , _ , refl , e)
 maybeLamImpl _ = nothing
-
 \end{code}
+
 POINTER - lemma
+
 \begin{code}
 
 lemma : ((`Π A B) , t) ≡ ((`Π A' B') , t')
@@ -271,49 +302,74 @@ lemma : ((`Π A B) , t) ≡ ((`Π A' B') , t')
 lemma refl = refl
 
 \end{code}
-POINTER - theorem
-\begin{code}
 
+POINTER - theorem statement
+
+\begin{code}
 theorem :
-  (λ γ → ((Sᵀ.Π A B) γ , λ a → t (γ , a)))
-  ≡ (λ γ → ((Sᵀ.Π A' B') γ , λ a → t' (γ , a)))
+  (λ γ → ((S.Π A B) γ , λ a → t (γ , a)))
+  ≡ (λ γ → ((S.Π A' B') γ , λ a → t' (γ , a)))
   → (A , B , t) ≡ (A' , B' , t')
-theorem p
-   = cong (λ f → (proj₁ ∘ f , (λ (γ , a) → proj₁ (proj₂ (f γ)) a) , λ (γ , a) → proj₂ (proj₂ (f γ)) a))
-      (funExt (λ γ → lemma (happly p γ)))
-
 \end{code}
+
+POINTER - theorem definition
+
+\begin{code}
+theorem p
+   = cong
+      (λ f
+          → (proj₁ ∘ f
+            , (λ (γ , a) → proj₁ (proj₂ (f γ)) a)
+            , λ (γ , a) → proj₂ (proj₂ (f γ)) a))
+      (funExt (λ γ → lemma (happly p γ)))
+\end{code}
+
+POINTER - term in proof of theorem
+
+\begin{code}
+piece :
+  (λ z → (A z , (λ a → B (z , a)) , (λ a → t (z , a))))
+  ≡ (λ z → (A' z , (λ a → B' (z , a)) , (λ a → t' (z , a))))
+piece = funExt  (λ γ → lemma (happly p γ))
+\end{code}
+
 POINTER - maybeLam
+
 \begin{code}
 
-maybeLam : Exp Γ (Sᵀ.Π A B) t
-  → Maybe (Exp (Γ , A) B (λ (γ , a) → t γ a))
+maybeLam : Term Γ (S.Π A B) t
+  → Maybe (Term (Γ , A) B (λ (γ , a) → t γ a))
 maybeLam e with maybeLamImpl e
 ... | nothing = nothing
 ... | just (A , B , t' , p , e') with (theorem p)
 ... | refl = just e'
 
 \end{code}
-POINTER - β-reduce
-\begin{code}
 
-βreduce : Exp Γ T t → Exp Γ T t
+POINTER - β-reduce
+
+\begin{code}
+βreduce : Term Γ T t → Term Γ T t
 βreduce (lambda e) = lambda (βreduce e)
-βreduce (var icx) = var icx
+βreduce (var x) = var x
 βreduce (Π A B) = Π (βreduce A) (βreduce B)
 βreduce U = U
-βreduce (raise e) = raise (βreduce e)
-βreduce (lower e) = lower (βreduce e)
-βreduce (cumuT e) = cumuT (βreduce e)
-βreduce (app e₁ e₂) with maybeLam e₁
-... | nothing = app (βreduce e₁) (βreduce e₂)
-... | just e = subExp (extend idSub e₂) e
-
+βreduce (app e₁ e₂) = ?
 \end{code}
+
+POINTER - app case of βreduce
+
+\begin{code}
+-- βreduce (app e₁ e₂) with maybeLam e₁
+-- ... | nothing = app (βreduce e₁) (βreduce e₂)
+-- ... | just e = subTerm (extend idSub e₂) e
+\end{code}
+
 POINTER
+
 \begin{code}
 
-term1 : Exp {2} ∅ Sᵀ.U Sᵀ.U
+term1 : Term {2} ∅ S.U S.U
 term1 = app (lambda (var same)) U
 
 test : βreduce term1 ≡ U
@@ -323,27 +379,27 @@ test = refl
 Some examples for paper:
 
 \begin{code}
-e : Exp Γ (Sᵀ.Π A B)
+e : Term Γ (S.Π A B)
 \end{code}
 
 \begin{code}
-maybeLam2 : Exp Γ (Sᵀ.Π A B) t
-  → Maybe (Exp (Γ , A) B (λ (γ , a) → t γ a))
+maybeLam2 : Term Γ (S.Π A B) t
+  → Maybe (Term (Γ , A) B (λ (γ , a) → t γ a))
 \end{code}
 
 \begin{code}
 theorem2 :
-  (λ γ → ((Sᵀ.Π A B) γ , λ a → t (γ , a))) ≡ (λ γ → ((Sᵀ.Π A' B') γ , λ a → t' (γ , a)))
+  (λ γ → ((S.Π A B) γ , λ a → t (γ , a))) ≡ (λ γ → ((S.Π A' B') γ , λ a → t' (γ , a)))
   → (A , B , t) ≡ (A' , B' , t')
 \end{code}
 
 \begin{code}
-maybeLam' : ∀{n SΓ Γ T t} → Exp {suc n} {SΓ} Γ T t
-  → Maybe (Σ (Sᵀ.Type (suc n) SΓ)
-          (λ A → Σ (Sᵀ.Type (suc n) (Sᵀ.cons SΓ A))
-          (λ B → Σ (Sᵀ.Term (Sᵀ.cons SΓ A) B)
+maybeLam' : ∀{n SΓ Γ T t} → Term {suc n} {SΓ} Γ T t
+  → Maybe (Σ (S.Type (suc n) SΓ)
+          (λ A → Σ (S.Type (suc n) (S.cons SΓ A))
+          (λ B → Σ (S.Term (S.cons SΓ A) B)
           (λ t' → Σ (_≡_ {_} {(γ : SΓ) → Σ (TypeCode (suc n)) ⟦_⟧}
             (λ γ → (T γ , t γ))
-            (λ γ → ((Sᵀ.Π A B) γ , λ a → t' (γ , a))))
-          (λ p → Exp (Γ , A) B t')))))
+            (λ γ → ((S.Π A B) γ , λ a → t' (γ , a))))
+          (λ p → Term (Γ , A) B t')))))
 \end{code}

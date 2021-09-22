@@ -33,9 +33,11 @@ extract {sΓ} {Γ} {T} {t} e = t
 
 POINTER - consistency
 
+--consistency : Term ∅ (λ _ → ⊥) t → ⊥
+--consistency e = (extract e) tt
 \begin{code}
-consistency : ∀{t} → Term {S.∅} ∅ (λ _ → ⊥) t → ⊥
-consistency e = (extract e) tt
+consistency : Term ∅ (S.Π S.U (S.var (S.same))) t → ⊥
+consistency e = ((extract e) tt) ⊥
 \end{code}
 
 POINTER - compileToJs helper functions
@@ -64,16 +66,24 @@ compileToJs U = "null"
 POINTER - example "two"
 
 \begin{code}
-two : Term ∅ (λ _ → (X Y : Set) → (X → Y) → X → Y) _
-two = lambda (lambda (lambda (lambda
+one : Term ∅ (λ _ → (X Y : Set) → (X → Y) → X → Y) _
+one = lambda (lambda (lambda (lambda
     (app (var (next same)) (var same)))))
+\end{code}
+
+POINTER - example U identity
+
+\begin{code}
+idU : Term ∅ (S.Π S.U S.U) _
+idU = lambda (var same)
 \end{code}
 
 POINTER - example identity
 
 \begin{code}
-id : Term ∅ (λ _ → (X : Set) → X → X) _
-id = lambda (lambda (var same))
+id' : Term ∅ (S.Π S.U
+    (S.Π (S.var S.same) (S.var (S.next S.same)))) _
+id' = lambda (lambda (var same))
 \end{code}
 
 POINTER - shallow embedding U -> U identity

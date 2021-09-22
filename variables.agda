@@ -37,3 +37,4 @@ postulate
   Typeᵢ₊₁ : Ty
   idSub : Ty
   _-_ : Ty
+  p : Ty

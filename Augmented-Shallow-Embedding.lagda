@@ -46,6 +46,6 @@ data Term : {sΓ : S.Ctx} → (Γ : Context sΓ) → (T : S.Type sΓ)
     → (A : Term Γ S.U₁ s₁)
     → (B : Term (Γ , s₁) S.U₁ s₂)
     → Term Γ S.U₁ (S.Π₁ s₁ s₂)
-  U₀ : {sΓ : S.Ctx} → {Γ : Context sΓ} → Term {sΓ} Γ S.U₁ S.U₀
+  U₀ : ∀{sΓ Γ} → Term {sΓ} Γ S.U₁ S.U₀
   U : {sΓ : S.Ctx} → {Γ : Context sΓ} → Term {sΓ} Γ S.U₁ S.U₀
 \end{code}

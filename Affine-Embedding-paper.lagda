@@ -32,11 +32,11 @@ data Check : VarData Γ → VarData Γ → VarData Γ
   → Set j where
   ∅ : Check ∅ ∅ ∅
   consLeft : (T : S.Type sΓ) → Check Γ₁ Γ₂ Γ₃
-    → Check {_} {Γ , T} (Γ₁ , true) (Γ₂ , false) (Γ₃ , true)
+    → Check (Γ₁ , true) (Γ₂ , false) (Γ₃ , true)
   consRight : (T : S.Type sΓ) → Check Γ₁ Γ₂ Γ₃
-    → Check {_} {Γ , T} (Γ₁ , false) (Γ₂ , true) (Γ₃ , true)
+    → Check (Γ₁ , false) (Γ₂ , true) (Γ₃ , true)
   consNeither : (T : S.Type sΓ) → Check Γ₁ Γ₂ Γ₃
-    → Check {_} {Γ , T} (Γ₁ , false) (Γ₂ , false) (Γ₃ , false)
+    → Check (Γ₁ , false) (Γ₂ , false) (Γ₃ , false)
 
 \end{code}
 
@@ -75,33 +75,33 @@ oneVars .(_ , _) (next x) = oneVars _ x , false
 POINTER - Main definition
 
 \begin{code}
-data AffineExp : (Γ : Context sΓ) → VarData Γ
-  → (T : S.Type sΓ) → S.Exp sΓ T → Set j where
-  app : AffineExp Γ Γ₁ (S.Π A B) s₁ → (x : AffineExp Γ Γ₂ A s₂)
-      → Check Γ₁ Γ₂ Γ₃
-      → AffineExp Γ Γ₃ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
-  Π : AffineExp Γ Γ₁ S.U s₁
-    → AffineExp (Γ , s₁) (Γ₂ , b) S.U s₂ → Check Γ₁ Γ₂ Γ₃
-    → AffineExp Γ Γ₃ S.U (S.Π s₁ s₂)
+data AffineTerm : (Γ : Context sΓ) → VarData Γ
+  → (T : S.Type sΓ) → S.Term sΓ T → Set j where
+  app : AffineTerm Γ Γ₁ (S.Π A B) s₁
+      → (x : AffineTerm Γ Γ₂ A s₂) → Check Γ₁ Γ₂ Γ₃
+      → AffineTerm Γ Γ₃ (λ γ → B (γ , s₂ γ)) (S.app s₁ s₂)
+  Π : AffineTerm Γ Γ₁ S.U s₁
+    → AffineTerm (Γ , s₁) (Γ₂ , b) S.U s₂ → Check Γ₁ Γ₂ Γ₃
+    → AffineTerm Γ Γ₃ S.U (S.Π s₁ s₂)
   -- ...
 \end{code}
 POINTER
 \begin{code}
-  lambda : AffineExp (Γ , A) (vd , b) B s
-    → AffineExp Γ vd (S.Π A B) (S.lambda s)
-  var : (x : Var Γ T s) → AffineExp {sΓ} Γ (oneVars Γ x) T s
-  Π₁ : AffineExp Γ Γ₁ S.U₁ s₁
-    → AffineExp (Γ , s₁) (Γ₂ , b) S.U₁ s₂ → Check Γ₁ Γ₂ Γ₃
-    → AffineExp Γ Γ₃ S.U₁ (S.Π₁ s₁ s₂)
-  U₀ : AffineExp {sΓ} Γ (noneVars) S.U₁ S.U₀
+  lambda : AffineTerm (Γ , A) (vd , b) B s
+    → AffineTerm Γ vd (S.Π A B) (S.lambda s)
+  var : (x : Var Γ T s) → AffineTerm {sΓ} Γ (oneVars Γ x) T s
+  Π₁ : AffineTerm Γ Γ₁ S.U₁ s₁
+    → AffineTerm (Γ , s₁) (Γ₂ , b) S.U₁ s₂ → Check Γ₁ Γ₂ Γ₃
+    → AffineTerm Γ Γ₃ S.U₁ (S.Π₁ s₁ s₂)
+  U₀ : AffineTerm {sΓ} Γ (noneVars) S.U₁ S.U₀
 \end{code}
 
 
 POINTER checkAffine declaration
 
 \begin{code}
-checkAffine : Exp Γ T t
-  → Maybe (Σ (VarData Γ) (λ vd → AffineExp Γ vd T t))
+checkAffine : Term Γ T t
+  → Maybe (Σ (VarData Γ) (λ vd → AffineTerm Γ vd T t))
 \end{code}
 
 POINTER - checkAffine definition
@@ -136,16 +136,16 @@ checkAffine U₀ = just (noneVars ,  U₀)
 
 POINTER - Examples
 \begin{code}
-ex1 : AffineExp ∅ ∅ (λ _ → (Set → Set)) _
+ex1 : AffineTerm ∅ ∅ (λ _ → (Set → Set)) _
 ex1 = lambda (var same)
 
-ex1' : Exp ∅ (λ _ → (Set → Set)) _
+ex1' : Term ∅ (λ _ → (Set → Set)) _
 ex1' = lambda (var same)
 
 test1 : checkAffine ex1' ≡ just (_ , ex1)
 test1 = refl
 
-ex2 : Exp ∅ (λ _ → (X : Set) → X → X) _
+ex2 : Term ∅ (λ _ → (X : Set) → X → X) _
 ex2 = lambda (lambda (var same))
 
 test2 : checkAffine ex2 ≡ just (_ , lambda (lambda (var same)))
